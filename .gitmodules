@@ -1,0 +1,3 @@
+[submodule "HLCio"]
+	path = HLCio
+	url = https://github.com/MohamedHmini/HLCio
