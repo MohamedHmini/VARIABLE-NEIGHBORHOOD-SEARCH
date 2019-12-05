@@ -1,6 +1,3 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<stdbool.h>
 #include "HLCio/dataframe.h"
 
 
@@ -11,54 +8,91 @@
 
 
 
+
 typedef DF_ELEMENT OPT_VAL;
 typedef DF_ELEMENT POLICY;
 typedef DF_ELEMENT NEIGHBORHOOD;
-typedef POLICY (*neighborhood_structure)();
 
+// DETERMINISTIC NIGHBORHOODing : 
+typedef NEIGHBORHOOD (*NEIGHBORHOOD_STRUCT)();
+typedef NEIGHBORHOOD (**NEIGHBORHOOD_STRUCTURES)();
+
+// STOCHASTIC NEIGHBORHOODing : 
+typedef POLICY (*STOCHASTIC_NEIGHBORHOOD_STRUCT)();
+typedef POLICY (**STOCHASTIC_NEIGHBORHOOD_STRUCTURES)();
 
 typedef struct LOCAL_SEARCH_RESULT{
     POLICY bx; // neighborhood structure optimal policy
     int k; // neighborhood structure index
 }LOCAL_SEARCH_RESULT;
 
-typedef struct RESULT{
+typedef struct VNS_RESULT{
     POLICY policy;
     OPT_VAL opt_val;
-}RESULT;
+}VNS_RESULT;
 
 
 
 // OBJECTIVE FUNCTION : 
 typedef OPT_VAL (*OPT_FUNC)(POLICY);
-extern OPT_FUNC f;
 
 // OPTIMALITY CONDITION : 
-typedef bool (*CMP_OPTIMALITY)(POLICY, POLICY);
-extern CMP_OPTIMALITY cmp_optimality;
+typedef CMP_RESULT (*CMP_OPTIMALITY)(POLICY, POLICY, int, int);
+
+
+
+// VNS CONFIG STRUCT :
+typedef struct VNS_CONFIG{
+    OPT_FUNC f;
+    CMP_OPTIMALITY cmp_optimality;
+    DATAFRAME *ds;
+}VNS_CONFIG;
+
+extern VNS_CONFIG vns_config;
+
+
+
+
 
 // ESSENTIAL FUNCTIONS :
-    // neighborhood structures : 
+    // deterministic neighborhood structures : 
+
 NEIGHBORHOOD block_swapping(POLICY, int, int);
 NEIGHBORHOOD block_reversing(POLICY, int);
 NEIGHBORHOOD shuffling();
 NEIGHBORHOOD (*neighborhood)();
+
+     // deterministic neighborhood structures : 
+POLICY stochastic_block_swapping(POLICY, int, int);
+POLICY stochastic_block_reversing(POLICY, int);
+POLICY stochastic_shuffling();
+POLICY (*stochastic_neighborhood)();
+
 // POLICY (*get_candidate)();
 LOCAL_SEARCH_RESULT change_neighborhood(POLICY, POLICY, int);
-// POLICY shake(POLICY, int);
+// POLICY shake(POLICY, STOCHASTIC_NEIGHBORHOOD_STRUCT);
+NEIGHBORHOOD_STRUCTURES neistructs(int);
+STOCHASTIC_NEIGHBORHOOD_STRUCTURES stoch_neistructs(int);
 
 
-// LOCAL SEARCH FUNCTIONS :
-POLICY best_improvement(POLICY);
-POLICY first_improvement(POLICY);
+// DETERMINISTIC LOCAL SEARCH FUNCTIONS :
+POLICY best_improvement(POLICY, NEIGHBORHOOD);
+POLICY first_improvement(POLICY, NEIGHBORHOOD);
+
+// STOCHASTIC LOCAL SEARCH : 
+POLICY stochastic_hill_climbing(POLICY, STOCHASTIC_NEIGHBORHOOD_STRUCT, int);
+
 // P.S : THE FULL IMPLEMENTATION OF THE ABOVE'S LOCAL SEARCH ALGOS IS FOUND IN THE VND ALGORITHM BENEATH THIS POST-SCRIPT.
 
 
 // VARIABLE NEIGHBORHOOD SEARCH :
 
     // VARIABLE NEIGHBORHOOD DESCENT : 
-POLICY VND(POLICY, POLICY (**)());
+POLICY VND(POLICY, POLICY (**)(), int);
+POLICY STOCHASTIC_VND(POLICY, STOCHASTIC_NEIGHBORHOOD_STRUCTURES, int);
     // VNS VARIANTS : 
+POLICY STOCHASTIC_BVNS(POLICY, STOCHASTIC_NEIGHBORHOOD_STRUCTURES, int, int); 
+POLICY STOCHASTIC_GVNS(POLICY, STOCHASTIC_NEIGHBORHOOD_STRUCTURES, STOCHASTIC_NEIGHBORHOOD_STRUCTURES, int, int, int);
 POLICY VNS(POLICY, POLICY (**)());
 POLICY RVNS(POLICY, POLICY (**)());
 POLICY BVNS(POLICY, POLICY (**)());
