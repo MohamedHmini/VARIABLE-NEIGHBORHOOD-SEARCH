@@ -87,14 +87,23 @@ POLICY block_swapping_1(POLICY x){
 }
 
 POLICY block_reversing_1(POLICY x){
-    return stochastic_block_reversing(x, 30);
+    return stochastic_block_reversing(x, 20);
 }
 
+POLICY block_swapping_3(POLICY x){
+    return stochastic_block_swapping(x, 30, 4);
+}
+
+
 POLICY block_swapping_2(POLICY x){
-    return stochastic_block_swapping(x, 3, 0);
+    return stochastic_block_swapping(x, 10, 0);
 }
 
 POLICY block_reversing_2(POLICY x){
+    return stochastic_block_reversing(x, 50);
+}
+
+POLICY block_reversing_3(POLICY x){
     return stochastic_block_reversing(x, 100);
 }
 
@@ -103,12 +112,12 @@ void main(){
     
     vns_config.f = f;
     vns_config.cmp_optimality = cmp;
-    FILE *fds = fopen("E:\\INSEA-STUDENT\\S1\\TECH-OPT\\VNS_ASSIGNMENT\\c500t3.txt", "r");
+    FILE *fds = fopen("/mnt/e/INSEA-STUDENT/S1/TECH-OPT/VNS_ASSIGNMENT/c500t3.txt", "r");
     vns_config.ds = csv_to_df(fds, "\t"); 
     DF_STR_TO_INT(&vns_config.ds->data[0][0]);
     DF_STR_TO_INT(&vns_config.ds->data[0][1]);
     df_retype(vns_config.ds, DF_ELEMENT_TInt, 1);
-    // display_df(vns_config.ds);
+    display_df(vns_config.ds, 1);
     
     POLICY bx = arrcreate(500);
     for(int i = 0; i<bx.node.Arr->size; i++){
@@ -116,64 +125,28 @@ void main(){
         bx.node.Arr->data[i].node.Int = 499 - i;
     }
 
-    STOCHASTIC_NEIGHBORHOOD_STRUCTURES N1 = stoch_neistructs(2);
+    STOCHASTIC_NEIGHBORHOOD_STRUCTURES N1 = stoch_neistructs(3);
     N1[0] = block_swapping_1;
     N1[1] = block_reversing_1;
+    N1[2] = block_reversing_3;
 
-    STOCHASTIC_NEIGHBORHOOD_STRUCTURES N2 = stoch_neistructs(2);
+    STOCHASTIC_NEIGHBORHOOD_STRUCTURES N2 = stoch_neistructs(3);
     N2[0] = block_swapping_2;
     N2[1] = block_reversing_2;
+    N2[2] = block_swapping_3;
  
-    
 
-    // arrshow(&bx);
-    // POLICY x = STOCHASTIC_BVNS(bx, N2, 2, 100);
-    POLICY x = STOCHASTIC_VND(bx, N2, 2);
-    // POLICY x = stochastic_hill_climbing(bx, N2[0], 100000);
+
+    // POLICY x = STOCHASTIC_BVNS(bx, N2, 3, 10);
+    POLICY x = STOCHASTIC_GVNS(bx, N1, N2, 3, 3, 30);
     OPT_VAL ov = vns_config.f(x); 
     printf(" %d ", ov.node.Int);
-    // arrshow(&x);
+
+    free(N1);
+    free(N2);
     arrfree(&x);
     arrfree(&bx);
-
-    // POLICY x = STOCHASTIC_GVNS(bx, N1, N2, 2, 2, 1000);
-    // arrshow(&x);
-    // OPT_VAL ov = vns_config.f(x);
-    // printf(" %d ", ov.node.Int);
-    // arrfree(&x);
-    // POLICY x = arrcreate(500);
-    // printf("here");
-    // for(int i = 0; i<x.node.Arr->size; i++){
-    //     x.node.Arr->data[i].node.Int = i;
-    // }
-    // OPT_VAL ov = f(x);
-    // printf("%d",ov.node.Int);
-    // arrfree(&x);
-    // arrshow(&x);
-
-    // POLICY nx = stochastic_block_reversing(x, 4);
-
-    // arrshow(&nx);
-    // POLICY x = arrcreate(10)
-
-
-    // for(int i = 0; i<x.node.Arr->size;i++){
-    //     x.node.Arr->data[i].node.Int = i;
-    // }
-    // df_retype(vns_config.ds, DF_ELEMENT_TInt, 1);
-    // display_df(vns_config.ds);
-    // printf("n : %s m : %s\n", vns_config.ds->data[0][0].node.Str, vns_config.ds->data[0][1].node.Str);
-    // x.node.Arr->data[4].node.Int = -2;
-    // arrshow(&x);
-    // CMP_RESULT r = arrcmp(&x, min);
-    // printf("\n%d\n",r.index);
     fclose(fds);
     df_free(vns_config.ds);
-
-
-    // NEIGHBORHOOD_STRUCTURES Ns = neistructs(2);
-    // Ns[0] = block_reversing;
-    // Ns[1] = block_swapping;
-    // Ns[2] = block_reversing2;
 
 }
