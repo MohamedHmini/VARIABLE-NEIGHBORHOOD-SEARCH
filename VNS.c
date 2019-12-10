@@ -9,81 +9,6 @@
 VNS_CONFIG vns_config;
 
 
-//
-
-
-// POLICY shake(POLICY x, STOCHASTIC_NEIGHBORHOOD_STRUCT nei_struct){
-//     POLICY nx = nei_struct(x);
-//     return nx
-// }
-
-
-// DETERMINISTIC NEIGHBORHOODing :
-
-
-NEIGHBORHOOD block_swapping(POLICY x, int block_size, int swap_factor){
-    NEIGHBORHOOD N;
-    int bound = (int)(x.node.Arr->size/block_size) - swap_factor;
-
-    for(int i = 0;i<bound;i++){
-        POLICY nx = df_element_copy(x);
-        int lb = i+block_size + swap_factor;
-        // int ub = i+2*block_size + swap_factor;
-        // swapping : 
-        for(int j = 0;j<block_size;j++){
-            int tmp;
-            tmp = nx.node.Arr->data[i + j].node.Int;
-            nx.node.Arr->data[i + j].node.Int = nx.node.Arr->data[lb + j].node.Int;
-            nx.node.Arr->data[lb + j].node.Int = tmp;
-        }
-
-        arrpush(&N,nx);
-    }
-
-    return N;
-}
-
-
-NEIGHBORHOOD block_reversing(POLICY x, int block_size){
-    NEIGHBORHOOD N;
-    int bound = (int)x.node.Arr->size/block_size;
-
-    for(int i = 0;i<bound;i++){
-        POLICY nx = df_element_copy(x);
-
-        for(int j = 0;j<(int)block_size/2;j++){
-            int tmp;
-            tmp = nx.node.Arr->data[i + 1 + j].node.Int;
-            nx.node.Arr->data[i + 1 + j].node.Int = nx.node.Arr->data[i + block_size - j].node.Int;
-            nx.node.Arr->data[i + block_size - j].node.Int = tmp;
-        }
-        arrpush(&N, nx);
-    }
-
-    return N;
-}
-
-
-// POLICY one_step_block_swapping(POLICY x, int block_size, int swap_factor, int i){
-
-//     int bound = (int)(x.node.Arr->size/block_size) - swap_factor;
-    
-//     POLICY nx = df_element_copy(x);
-//     // POLICY nx = x;
-//     int lb = i+block_size + swap_factor;
-//     int ub = i+2*block_size + swap_factor;
-
-//     // swapping : 
-//     for(int j = 0;j<block_size;j++){
-//         int tmp;
-//         tmp = nx.node.Arr->data[i + j].node.Int;
-//         nx.node.Arr->data[i + j].node.Int = nx.node.Arr->data[lb + j].node.Int;
-//         nx.node.Arr->data[lb + j].node.Int = tmp;
-//     }
-
-//     return nx;
-// }
-
 
 
 NEIGHBORHOOD_STRUCTURES neistructs(int size){
@@ -93,55 +18,83 @@ NEIGHBORHOOD_STRUCTURES neistructs(int size){
 
 
 
-STOCHASTIC_NEIGHBORHOOD_STRUCTURES stoch_neistructs(int size){
-    STOCHASTIC_NEIGHBORHOOD_STRUCTURES Ns = malloc(sizeof(STOCHASTIC_NEIGHBORHOOD_STRUCT) * size);
-    return Ns;
+
+// DETERMINISTIC NEIGHBORHOODing : 
+
+
+POLICY* __block_swapping(POLICY x, int block_size, int swap_factor, int i){
+
+    int lb = i+block_size + swap_factor;
+    int ub = i+2*block_size + swap_factor;
+
+    POLICY* nx = malloc(sizeof(DF_ELEMENT));
+    *nx = df_element_copy(x);
+
+    // swapping : 
+    for(int j = 0;j<block_size;j++){
+        int tmp;
+        tmp = nx->node.Arr->data[i + j].node.Int;
+        nx->node.Arr->data[i + j].node.Int = nx->node.Arr->data[lb + j].node.Int;
+        nx->node.Arr->data[lb + j].node.Int = tmp;
+    }
+
+    return nx;
+}
+
+
+POLICY* __block_reversing(POLICY x, int block_size, int i){
+
+    POLICY* nx = df_element_create();
+    *nx = df_element_copy(x);
+
+    // reversing : 
+    for(int j = 0;j< (int)((block_size-2)/2);j++){
+        int tmp;
+        int first_element = 1 + j;
+        int second_element = block_size - 2 - j;
+        tmp = nx->node.Arr->data[i + first_element].node.Int;
+        nx->node.Arr->data[i + first_element].node.Int = nx->node.Arr->data[i + second_element].node.Int;
+        nx->node.Arr->data[i + second_element].node.Int = tmp;
+    }
+
+    return nx;
 }
 
 
 // STOCHASTIC NEIGHBORHOODing : 
 
 
-POLICY stochastic_block_swapping(POLICY x, int block_size, int swap_factor){
+POLICY* block_swapping(POLICY x, int block_size, int swap_factor,  int i){
+    int bound = x.node.Arr->size - (2*block_size + swap_factor) + 1;
+    POLICY* nx = NULL;
 
-    int bound = (int)(x.node.Arr->size/block_size) - swap_factor;
-    srand(time(NULL));
-    int i = randint(0, bound);
-
-    POLICY nx = df_element_copy(x);
-    // POLICY nx = x;
-    int lb = i+block_size + swap_factor;
-    int ub = i+2*block_size + swap_factor;
-
-    // swapping : 
-    for(int j = 0;j<block_size;j++){
-        int tmp;
-        tmp = nx.node.Arr->data[i + j].node.Int;
-        nx.node.Arr->data[i + j].node.Int = nx.node.Arr->data[lb + j].node.Int;
-        nx.node.Arr->data[lb + j].node.Int = tmp;
+    if(i == -1){
+        srand(time(NULL));
+        i = randint(0, bound);
     }
+       
+    if(i < bound)
+        nx = __block_swapping(x, block_size, swap_factor, i);
 
     return nx;
 }
 
 
-POLICY stochastic_block_reversing(POLICY x, int block_size){
-
-    int bound = (int)x.node.Arr->size/block_size;
-    srand(time(NULL));
-    int i = randint(0, bound);
-
-    POLICY nx = df_element_copy(x);
-    // POLICY nx = x;
-    for(int j = 0;j<(int)block_size/2;j++){
-        int tmp;
-        tmp = nx.node.Arr->data[i + 1 + j].node.Int;
-        nx.node.Arr->data[i + 1 + j].node.Int = nx.node.Arr->data[i + block_size - j].node.Int;
-        nx.node.Arr->data[i + block_size - j].node.Int = tmp;
+POLICY* block_reversing(POLICY x, int block_size,  int i){
+    int bound = x.node.Arr->size - block_size + 1;
+    POLICY* nx = NULL;
+    
+    if(i == -1){
+        srand(time(NULL));
+        i = randint(0, bound);
     }
+    
+    if(i < bound)
+        nx = __block_reversing(x, block_size, i);
 
     return nx;
 }
+
 
 
 // ESSENTIAL FUNCTIONS : 
@@ -151,7 +104,6 @@ LOCAL_SEARCH_RESULT change_neighborhood(POLICY x, POLICY bx, int k){
     CMP_RESULT cmp_r = vns_config.cmp_optimality(x, bx, 0, 1);
 
     if(cmp_r.index == 0){
-        // printf("change of nei");
         k = 0;
     }
     else{
@@ -160,73 +112,112 @@ LOCAL_SEARCH_RESULT change_neighborhood(POLICY x, POLICY bx, int k){
 
     lsr.k = k;
     lsr.bx = df_element_copy(cmp_r.best);
-    // lsr.bx = cmp_r.best;
     arrfree(&cmp_r.best);
     
     return lsr;
 }
 
 // DETERMINISTIC LOCAL SEARCH : 
-POLICY best_improvement(POLICY bx, NEIGHBORHOOD N){
-    arrpush(&N, bx);
-    
-    CMP_RESULT r;
-    r.best = bx;
-    r.index = N.node.Arr->size - 1;
+POLICY best_improvement(POLICY bx, NEIGHBORHOOD_STRUCT nei_struct){
+    POLICY bxc = df_element_copy(bx);
+    POLICY *x = NULL;
+    CMP_RESULT cr;
 
-    r = arrcmp(&N, vns_config.cmp_optimality);
+    // local search exploitation : 
+    do{
+        POLICY started_with = df_element_copy(bxc);
+        int i = 0;
+        printf("%d\n", vns_config.f(bxc).node.Int);
+        while((x = nei_struct(bxc,i)) != NULL){  
+            // arrshow(x);  
+            cr = vns_config.cmp_optimality(*x, bxc, 0, 1); 
 
-    return bx;
+            if(cr.index == 0){
+                arrfree(&bxc);
+                bxc = df_element_copy(*x);
+            }
+
+            arrfree(&cr.best);
+            arrfree(x);
+            free(x);
+            x = NULL;
+            i++;        
+        }
+
+        cr = vns_config.cmp_optimality(bxc, started_with, 0, 1);
+        arrfree(&cr.best);
+        arrfree(&started_with);
+    }while(cr.index == 0);
+        
+    return bxc;
 }
 
 
-POLICY first_improvement(POLICY bx, STOCHASTIC_NEIGHBORHOOD_STRUCT nei_struct){
-    // int bound;
-    // POLICY bxc = df_element_copy(bx);
+POLICY first_improvement(POLICY bx, NEIGHBORHOOD_STRUCT nei_struct){
+    POLICY bxc = df_element_copy(bx);
+    CMP_RESULT cr;
 
-    // for(int i = 0;i<bound;i++){
-    //     POLICY x = nei_struct(bx,i);
-    //     CMP_RESULT cr = vns_config.cmp_optimality(x, bx, 0, 1);
+    // local search exploitation : 
+    do{
+        POLICY *x = NULL;
+        POLICY started_with = df_element_copy(bxc);
+        int i = 0;
+        printf("%d\n", vns_config.f(bxc).node.Int);
+        while((x = nei_struct(bxc,i)) != NULL){   
+            cr = vns_config.cmp_optimality(*x, bxc, 0, 1); 
+
+            if(cr.index == 0){
+                arrfree(&bxc);
+                bxc = df_element_copy(*x);
+                arrfree(&cr.best);
+                arrfree(x);
+                free(x);
+                x = NULL;
+                break;
+            }
+
+            arrfree(&cr.best);
+            arrfree(x);
+            free(x);
+            x = NULL;
+            i++;        
+        }
+
+        cr = vns_config.cmp_optimality(bxc, started_with, 0, 1);
+        arrfree(&cr.best);
+        arrfree(&started_with);
+    }while(cr.index == 0);
         
-    //     if(cr.index == 0){
-    //         arrfree(&bxc);
-    //         bxc = df_element_copy(x);
-    //         counter = stop_condition;
-    //     }
-    //     else{
-    //         counter--;
-    //     }
-    //     arrfree(&cr.best);
-    //     arrfree(&x);
-    // }
-
-
-    // return bxc;
+    return bxc;
 }
 
 
 // STOCHASTIC LOCAL SEARCH : 
-POLICY stochastic_hill_climbing(POLICY bx, STOCHASTIC_NEIGHBORHOOD_STRUCT nei_struct, int stop_condition){
+POLICY stochastic_hill_climbing(POLICY bx, NEIGHBORHOOD_STRUCT nei_struct){
+    int stop_condition = vns_config.STOCHASTIC_LR_FAILURE_LIMIT;
     int counter = stop_condition;
     POLICY bxc = df_element_copy(bx);
 
     while(counter > 0){
+        printf("%d\n", vns_config.f(bxc).node.Int);
         // printf("\n\tLS : %d", counter);
         // arrshow(&bxc);
-        POLICY x = nei_struct(bxc);
-        CMP_RESULT cr = vns_config.cmp_optimality(x, bxc, 0, 1);
+        POLICY *x = nei_struct(bxc, -1);
+        CMP_RESULT cr = vns_config.cmp_optimality(*x, bxc, 0, 1);
         
         
         if(cr.index == 0){
             arrfree(&bxc);
-            bxc = df_element_copy(x);
+            bxc = df_element_copy(*x);
             counter = stop_condition;
         }
         else{
             counter--;
         }
         arrfree(&cr.best);
-        arrfree(&x);
+        arrfree(x);
+        free(x);
+        x = NULL;
     }
     
 
@@ -237,81 +228,50 @@ POLICY stochastic_hill_climbing(POLICY bx, STOCHASTIC_NEIGHBORHOOD_STRUCT nei_st
 // GLOBAL OPT : 
 
 
-// POLICY VND(POLICY bx, NEIGHBORHOOD_STRUCTURES structs, int kmax){
-//     int k = 0;
 
-//     while(k < kmax){
-//         NEIGHBORHOOD N = structs[k](bx);
-//         POLICY x = best_improvement(bx, N);
-//         LOCAL_SEARCH_RESULT lsr = change_neighborhood(x, bx, k);
-//         bx = lsr.bx;
-//         k = lsr.k;
-//     }
-
-//     return bx;
-// }
-
-
-
-POLICY STOCHASTIC_VND(POLICY bx, STOCHASTIC_NEIGHBORHOOD_STRUCTURES structs, int kmax){
+POLICY VND(POLICY bx, NEIGHBORHOOD_STRUCTURES structs, int kmax){
     int k = 0;
     POLICY bxc = df_element_copy(bx);
-    // POLICY bxc = bx;
     
-    while(k < kmax){        
-        POLICY x = stochastic_hill_climbing(bxc, structs[k], 700);
+    while(k < kmax){      
+        printf(" %d ", k);
+        POLICY x = vns_config.local_search(bxc, structs[k]);
         LOCAL_SEARCH_RESULT lsr = change_neighborhood(x, bxc, k);
+        // change of neighborhood
         k = lsr.k;
+        // change of the best solution
         arrfree(&bxc);
         arrfree(&x);
         bxc = df_element_copy(lsr.bx);
-        // bxc = lsr.bx;
         arrfree(&lsr.bx);
+        
     }
-
+    
     return bxc;
 }
 
 
-POLICY STOCHASTIC_BVNS(POLICY bx, STOCHASTIC_NEIGHBORHOOD_STRUCTURES nei_structs, int kmax, int nbr_of_iterations){
+
+
+POLICY GVNS(POLICY bx, NEIGHBORHOOD_STRUCTURES N1, NEIGHBORHOOD_STRUCTURES N2, int kmax, int lmax, long nbr_of_iterations){
     
     POLICY bxc = df_element_copy(bx);
-    // POLICY bxc = bx;
 
     while(nbr_of_iterations > 0){
         int k = 0;
         while(k < kmax){
-            POLICY x = nei_structs[k](bxc);
-            POLICY x_2 = STOCHASTIC_VND(x, nei_structs, kmax);
-            arrfree(&x);
+            // shake : 
+            POLICY* x = N1[k](bxc, -1);
+            // local search : 
+            POLICY x_2 = VND(*x, N2, lmax);
+
+            arrfree(x);
+            free(x);
+
+            // changing the neighborhood :
             LOCAL_SEARCH_RESULT lsr = change_neighborhood(x_2, bxc, k);
             k = lsr.k;
-            arrfree(&x_2);
-            arrfree(&bxc);
-            bxc = df_element_copy(lsr.bx);
-            arrfree(&lsr.bx);
-        }
 
-        nbr_of_iterations--;
-    }
-
-    return bxc;
-}
-
-
-POLICY STOCHASTIC_GVNS(POLICY bx, STOCHASTIC_NEIGHBORHOOD_STRUCTURES N1, STOCHASTIC_NEIGHBORHOOD_STRUCTURES N2, int kmax, int lmax, int nbr_of_iterations){
-    
-    POLICY bxc = df_element_copy(bx);
-    // POLICY bxc = bx;
-
-    while(nbr_of_iterations > 0){
-        int k = 0;
-        while(k < kmax){
-            POLICY x = N1[k](bxc);
-            POLICY x_2 = STOCHASTIC_VND(x, N2, kmax);
-            arrfree(&x);
-            LOCAL_SEARCH_RESULT lsr = change_neighborhood(x_2, bxc, k);
-            k = lsr.k;
             arrfree(&x_2);
             arrfree(&bxc);
             bxc = df_element_copy(lsr.bx);
@@ -320,13 +280,8 @@ POLICY STOCHASTIC_GVNS(POLICY bx, STOCHASTIC_NEIGHBORHOOD_STRUCTURES N1, STOCHAS
 
         nbr_of_iterations--;
         // arrshow(&bxc);
-        printf("\nITER %d : %d",nbr_of_iterations, vns_config.f(bxc).node.Int);
+        // printf("\nITER %d : %d",nbr_of_iterations, vns_config.f(bxc).node.Int);
     }
 
     return bxc;
 }
-
-// POLICY RVNS(){}
-// POLICY BVNS(){}
-// POLICY GVNS(){}
-
