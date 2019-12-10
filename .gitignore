@@ -1,4 +1,4 @@
-.vscode
+.vscode/*
 *.exe
 test.c
 deterministic.c
