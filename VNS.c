@@ -6,10 +6,13 @@
 
 
 
+// the global VNS_CONFIG variable :
+
 VNS_CONFIG vns_config;
 
 
 
+// neighborhood structures array generator : 
 
 NEIGHBORHOOD_STRUCTURES neistructs(int size){
     NEIGHBORHOOD_STRUCTURES Ns = malloc(sizeof(NEIGHBORHOOD_STRUCT) * size);
@@ -19,7 +22,7 @@ NEIGHBORHOOD_STRUCTURES neistructs(int size){
 
 
 
-// DETERMINISTIC NEIGHBORHOODing : 
+// NEIGHBORHOOD STRUCTURES : 
 
 
 POLICY* __block_swapping(POLICY x, int block_size, int swap_factor, int i){
@@ -60,8 +63,6 @@ POLICY* __block_reversing(POLICY x, int block_size, int i){
     return nx;
 }
 
-
-// STOCHASTIC NEIGHBORHOODing : 
 
 
 POLICY* block_swapping(POLICY x, int block_size, int swap_factor,  int i){
@@ -127,7 +128,7 @@ POLICY best_improvement(POLICY bx, NEIGHBORHOOD_STRUCT nei_struct){
     do{
         POLICY started_with = df_element_copy(bxc);
         int i = 0;
-        printf("%d\n", vns_config.f(bxc).node.Int);
+
         while((x = nei_struct(bxc,i)) != NULL){  
             // arrshow(x);  
             cr = vns_config.cmp_optimality(*x, bxc, 0, 1); 
@@ -162,7 +163,7 @@ POLICY first_improvement(POLICY bx, NEIGHBORHOOD_STRUCT nei_struct){
         POLICY *x = NULL;
         POLICY started_with = df_element_copy(bxc);
         int i = 0;
-        printf("%d\n", vns_config.f(bxc).node.Int);
+        
         while((x = nei_struct(bxc,i)) != NULL){   
             cr = vns_config.cmp_optimality(*x, bxc, 0, 1); 
 
@@ -199,8 +200,6 @@ POLICY stochastic_hill_climbing(POLICY bx, NEIGHBORHOOD_STRUCT nei_struct){
     POLICY bxc = df_element_copy(bx);
 
     while(counter > 0){
-        printf("%d\n", vns_config.f(bxc).node.Int);
-        // printf("\n\tLS : %d", counter);
         // arrshow(&bxc);
         POLICY *x = nei_struct(bxc, -1);
         CMP_RESULT cr = vns_config.cmp_optimality(*x, bxc, 0, 1);
@@ -224,8 +223,6 @@ POLICY stochastic_hill_climbing(POLICY bx, NEIGHBORHOOD_STRUCT nei_struct){
     return bxc;    
 }
 
-
-// GLOBAL OPT : 
 
 
 
@@ -260,6 +257,7 @@ POLICY GVNS(POLICY bx, NEIGHBORHOOD_STRUCTURES N1, NEIGHBORHOOD_STRUCTURES N2, i
     while(nbr_of_iterations > 0){
         int k = 0;
         while(k < kmax){
+            printf("%d\n", vns_config.f(bxc).node.Int);
             // shake : 
             POLICY* x = N1[k](bxc, -1);
             // local search : 
@@ -267,6 +265,7 @@ POLICY GVNS(POLICY bx, NEIGHBORHOOD_STRUCTURES N1, NEIGHBORHOOD_STRUCTURES N2, i
 
             arrfree(x);
             free(x);
+            x = NULL;
 
             // changing the neighborhood :
             LOCAL_SEARCH_RESULT lsr = change_neighborhood(x_2, bxc, k);
@@ -284,4 +283,11 @@ POLICY GVNS(POLICY bx, NEIGHBORHOOD_STRUCTURES N1, NEIGHBORHOOD_STRUCTURES N2, i
     }
 
     return bxc;
+}
+
+
+
+void fVNS(){
+    free(vns_config.other_params);
+    df_free(vns_config.ds, 0);
 }

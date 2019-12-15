@@ -72,9 +72,10 @@ void main(){
     vns_config.f = f;
     vns_config.cmp_optimality = cmp;
     vns_config.local_search = first_improvement;
+    // vns_config.STOCHASTIC_LR_FAILURE_LIMIT = 100;
 
     // vns_config.STOCHASTIC_LR_FAILURE_LIMIT = 10;
-    FILE *fds = fopen("/mnt/e/INSEA-STUDENT/S1/TECH-OPT/TSP/ds2.csv", "r");
+    FILE *fds = fopen("./datasets/ds2.csv", "r");
     
     vns_config.ds = csv_to_df(fds, " ");     
     df_retype(vns_config.ds, DF_ELEMENT_TInt, 0);
@@ -102,7 +103,7 @@ void main(){
     OPT_VAL ov = vns_config.f(bx); 
     printf(" %d ", ov.node.Int);    
     
-    POLICY x = first_improvement(bx, N1[0]);
+    POLICY x = GVNS(bx, N1, N2, 3, 3, 300);
     
     arrshow(&x);
     ov = vns_config.f(x); 
