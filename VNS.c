@@ -231,7 +231,6 @@ POLICY VND(POLICY bx, NEIGHBORHOOD_STRUCTURES structs, int kmax){
     POLICY bxc = df_element_copy(bx);
     
     while(k < kmax){      
-        printf(" %d ", k);
         POLICY x = vns_config.local_search(bxc, structs[k]);
         LOCAL_SEARCH_RESULT lsr = change_neighborhood(x, bxc, k);
         // change of neighborhood
@@ -250,36 +249,49 @@ POLICY VND(POLICY bx, NEIGHBORHOOD_STRUCTURES structs, int kmax){
 
 
 
-POLICY GVNS(POLICY bx, NEIGHBORHOOD_STRUCTURES N1, NEIGHBORHOOD_STRUCTURES N2, int kmax, int lmax, long nbr_of_iterations){
+POLICY GVNS(POLICY bx, NEIGHBORHOOD_STRUCTURES N1, NEIGHBORHOOD_STRUCTURES N2, int kmax, int lmax, int stopping_condition){
     
     POLICY bxc = df_element_copy(bx);
+    int counter = stopping_condition;
 
-    while(nbr_of_iterations > 0){
+    while(counter > 0){
+        POLICY x_start = df_element_copy(bxc);
         int k = 0;
         while(k < kmax){
             printf("%d\n", vns_config.f(bxc).node.Int);
             // shake : 
             POLICY* x = N1[k](bxc, -1);
-            // local search : 
-            POLICY x_2 = VND(*x, N2, lmax);
 
-            arrfree(x);
-            free(x);
-            x = NULL;
+            if(x != NULL){
+                
+                // local search : 
+                POLICY x_2 = VND(*x, N2, lmax);
+                
+                arrfree(x);
+                free(x);
+                x = NULL;
 
-            // changing the neighborhood :
-            LOCAL_SEARCH_RESULT lsr = change_neighborhood(x_2, bxc, k);
-            k = lsr.k;
+                // changing the neighborhood :
+                LOCAL_SEARCH_RESULT lsr = change_neighborhood(x_2, bxc, k);
+                k = lsr.k;
 
-            arrfree(&x_2);
-            arrfree(&bxc);
-            bxc = df_element_copy(lsr.bx);
-            arrfree(&lsr.bx);
+                arrfree(&x_2);
+                arrfree(&bxc);
+                bxc = df_element_copy(lsr.bx);
+                arrfree(&lsr.bx);
+            }
+            
+            
         }
 
-        nbr_of_iterations--;
-        // arrshow(&bxc);
-        // printf("\nITER %d : %d",nbr_of_iterations, vns_config.f(bxc).node.Int);
+        // change the status of stopping condition : 
+        CMP_RESULT cr = vns_config.cmp_optimality(bxc, x_start, 0, 1);
+        if(cr.index == 0)
+            counter = stopping_condition;
+        else
+            counter--;
+        arrfree(&cr.best);
+        arrfree(&x_start);
     }
 
     return bxc;

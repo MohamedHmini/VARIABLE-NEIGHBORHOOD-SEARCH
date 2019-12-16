@@ -2,10 +2,11 @@
 #include<stdlib.h>
 #include<stdbool.h>
 #include<string.h>
+#include<time.h>
 #include "VNS.h"
 #include "HLCio/advio.h"
 #include "HLCio/dataframe.h"
-#define GVNS_MAX_NBR_ITERATIONS 30
+#define GVNS_STOPPING_CONDITION 300
 
 /// the quick sort algorithm is taken from geeksforgeeks platform!
 
@@ -151,20 +152,20 @@ POLICY* s1(POLICY x, int i){
 }
 
 POLICY* s2(POLICY x, int i){
-    return block_swapping(x, 1, 10, i);
+    return block_swapping(x, 4, 30, i);
 }
 
 POLICY* s3(POLICY x, int i){
-    return block_swapping(x, 30, 0, i);
+    return block_swapping(x, 1, 100, i);
 }
 
 
 POLICY* s4(POLICY x, int i){
-    return block_reversing(x, 36, i);
+    return block_reversing(x, 20, i);
 }
 
 POLICY* s5(POLICY x, int i){
-    return block_reversing(x, 47, i);
+    return block_reversing(x, 30, i);
 }
 
 POLICY* s6(POLICY x, int i){
@@ -179,7 +180,7 @@ int main(int argc, char *args[]){
     vns_config.f = f;
     vns_config.cmp_optimality = cmp;
     vns_config.local_search = first_improvement;
-    // vns_config.STOCHASTIC_LR_FAILURE_LIMIT = 100;
+    // vns_config.STOCHASTIC_LR_FAILURE_LIMIT = 300;
 
     FILE *fds = fopen(filename, "r");
     
@@ -189,25 +190,33 @@ int main(int argc, char *args[]){
     // load the number of commodities and the number of drivers :
     vns_config.other_params = (int*)malloc(sizeof(int) * 2);
     char* fline = get_line(fds);
-    vns_config.other_params[0] = atoi(strtok(fline, "\t"));
-    vns_config.other_params[1] = atoi(strtok(NULL, "\t"));
+
+    vns_config.other_params[0] = atoi(strtok(fline, " "));
+    vns_config.other_params[1] = atoi(strtok(NULL, " "));
     free(fline);
-    rewind(fds);    
+    rewind(fds);  
 
     // load the commodities processing time / set up time :
     vns_config.ds = csv_to_df(fds, 1, "\t"); 
 
     // retyping the data to int :
     df_retype(vns_config.ds, DF_ELEMENT_TInt, 0);
-    display_df(vns_config.ds, 0);
+    // display_df(vns_config.ds, 0);
     
     // initiating the solution with LONGEST PROCESSING TIME first :
-    POLICY bx = LPT();
+    // POLICY bx = LPT();
+
+
+    POLICY bx = arrcreate(vns_config.other_params[0]);
+    for(int i = 0; i<bx.node.Arr->size; i++){
+        bx.node.Arr->data[i].type = DF_ELEMENT_TInt;
+        bx.node.Arr->data[i].node.Int = i;
+    }
 
     // creating the first neighborhood structure set :
     NEIGHBORHOOD_STRUCTURES N1 = neistructs(3);
     N1[0] = s1;
-    N1[1] = s4;
+    N1[1] = s2;
     N1[2] = s3;
 
     // creating the second neighborhood structure set :
@@ -216,14 +225,14 @@ int main(int argc, char *args[]){
     N2[1] = s5;
     N2[2] = s6;
 
-    // running GVNS :
-    POLICY x = GVNS(bx, N1, N2, 3, 3, GVNS_MAX_NBR_ITERATIONS);
 
-    // OPT_VAL ov = vns_config.f(x); 
-    // printf(" %d ", ov.node.Int);
+    POLICY x = GVNS(bx, N2, N1, 3, 3, 15);
+    arrshow(&x);
 
-
-    // arrfree(&x);
+    OPT_VAL ov = vns_config.f(x); 
+    printf("\nOPTIMUM :  %d \n", ov.node.Int);
+    
+    arrfree(&x);
     free(N1);
     free(N2);    
     arrfree(&bx);

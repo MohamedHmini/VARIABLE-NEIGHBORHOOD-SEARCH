@@ -20,6 +20,7 @@ typedef POLICY (*LOCAL_SEARCH)();
 
 
 typedef struct LOCAL_SEARCH_RESULT{
+    
     POLICY bx; // neighborhood structure optimal policy
     int k; // neighborhood structure index
 }LOCAL_SEARCH_RESULT;
@@ -80,7 +81,7 @@ POLICY stochastic_hill_climbing(POLICY, NEIGHBORHOOD_STRUCT);
     // VARIABLE NEIGHBORHOOD DESCENT : 
 POLICY VND(POLICY, NEIGHBORHOOD_STRUCTURES, int);
     // GENERAL VARIABLE NEIGHBORHOOD SEARCH : 
-POLICY GVNS(POLICY, NEIGHBORHOOD_STRUCTURES, NEIGHBORHOOD_STRUCTURES, int, int, long);
+POLICY GVNS(POLICY, NEIGHBORHOOD_STRUCTURES, NEIGHBORHOOD_STRUCTURES, int, int, int);
 
 // free VNS config :
 void fVNS();
