@@ -1,4 +1,4 @@
-# IMPLEMENTING THE VNS ALGORITHM WITH C :
+# VNS-SOLVER : [IMPLEMENTED IN C LANGUAGE]
 
 ### SOLVING A 'P||Cmax' SCHEDULING PROBLEM
 to compile the scheduler program you should run the following bash code :
@@ -13,4 +13,3 @@ e.g :
 ```bash
 ./main ./datasets/c500t3.txt 10
 ```
-### SOLVING A FULL K-CARDINALITY PROBLEM
