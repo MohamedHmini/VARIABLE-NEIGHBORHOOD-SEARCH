@@ -1,4 +1,4 @@
-# VNS-SOLVER : [IMPLEMENTED IN C LANGUAGE]
+# VNS-SOLVER :
 
 ### SOLVING A 'P||Cmax' SCHEDULING PROBLEM
 to compile the scheduler program you should run the following bash code :
